@@ -30,7 +30,7 @@
 - name: Create filesystems
   include: fs.yml
 
-- name: Create and mount ZFS pools
+- name: Create and mount ZFS pool
   include: zfs.yml
   when: zfs_pool is defined and zfs_fs is defined
 

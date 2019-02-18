@@ -1,19 +1,22 @@
 ---
 
 galaxy_info:
-  author: "Nils Meyer"
-  description: "Bootstrap a Debian / Ubuntu system"
+  author: "Sascha Dewald"
+  description: "Bootstrap a Debian / Ubuntu system -- Fork from Nils Meyer"
   license: "LGPL"
-  min_ansible_version: 2.1
+  min_ansible_version: 2.6
   platforms:
   - name: Debian
     versions:
-    - jessie
+      - jessie
+      - stretch
   - name: Ubuntu
     versions:
       - trusty
       - xenial
       - yakkety
+      - bionic
+      - cosmic
   galaxy_tags:
     - system
 

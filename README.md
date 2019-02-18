@@ -26,6 +26,8 @@ is strongly suggested you use ansible-vault here)
 * Ubuntu
   * xenial
   * yakkety
+  * bionic
+  * cosmic
 
 Minor modifications will likely make it possible to install newer and perhaps
 older versions as well.

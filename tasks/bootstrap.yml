@@ -26,7 +26,7 @@
   command: "eatmydata debootstrap {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}"
 
 - name: bind mount pseudo filesystems
-  shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
+  shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --rbind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
   register: _pseudomount
   with_items:
   - proc
@@ -42,13 +42,31 @@
 
 - name: build list of packages to install
   set_fact:
-    _install: "{{ install_packages + required_packages['all'] + required_packages[release] }}"
+    _install: "{{ install_packages + required_packages['all'] + required_packages[release]|default([]) }}"
+
+- name: add grup-efi-amd64
+  set_fact: "{{ _install + ['grub-efi-amd64'] }}"
+  when: grub_efi|default(True)
+
+- name: add grup-pc
+  set_fact: "{{ _install + ['grub-pc'] }}"
+  when: not grub_efi|default(True)
 
 - debug:
     msg: "Going to install: {{ _install|join(', ') }}"
     verbosity: 2
 
 - block:
+  - name: place sources.list in /etc/apt
+    template:
+      src: "{{ item.src }}"
+      dest: "{{ _bootstrap_target }}/etc/{{ item.dest|default(item.src) }}"
+      owner: "{{ item.owner|default('root') }}"
+      group: "{{ item.group|default('root') }}"
+      mode: "{{ item.mode|default('0644') }}"
+    with_items:
+    - { src: 'sources.list.j2', dest: 'apt/sources.list'}
+
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
 
@@ -82,6 +100,7 @@
     - proc
     - sys
     - dev
+    #- tmp
 
   - name: copy data from temp
     shell: cp -a {{ _bootstrap_target }}/* {{ _tgt_root }}/

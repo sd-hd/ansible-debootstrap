@@ -1,5 +1,8 @@
 ---
 
+- name: umount unused
+  command: umount -a
+
 - name: Wipe disklabel
   command: sgdisk -Z {{ item }}
   with_items: "{{ _target_devices }}"
@@ -8,3 +11,4 @@
   command: blkdiscard {{ item }}
   failed_when: False
   with_items: "{{ _target_devices }}"
+

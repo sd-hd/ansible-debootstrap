@@ -1,10 +1,18 @@
 ---
+- name: Create vfat filesystems
+  command: >
+    mkfs.vfat {{ item.value['mkfs_options']|default('-F32') }} {{ item.value['device'] }}
+  with_dict: "{{ _tgt_devices }}"
+  when: >
+    _tgt_devices and
+    not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') == 'vfat'
 
 - name: Create ext4 filesystems
   command: >
     mkfs.ext4 -U {{ item.key }} {{ item.value['mkfs_options']|default('-b 4096') }} {{ item.value['device'] }}
   with_dict: "{{ _tgt_devices }}"
   when: >
+    _tgt_devices and
     not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') == 'ext4'
 
 - name: Create xfs filesystems
@@ -13,4 +21,5 @@
     {{ item.value['device'] }}
   with_dict: "{{ _tgt_devices }}"
   when: >
+    _tgt_devices and
     not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') == 'xfs'

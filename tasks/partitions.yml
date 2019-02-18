@@ -6,6 +6,28 @@
       _target_devices: "{{ _target_devices + [item.device] }}"
     with_items: "{{ layout }}"
 
+  - name: create list of zap devices
+    set_fact:
+      _zap_devices: "{{ _zap_devices|default({})|combine({item.device: item})  }}"
+    with_items: "{{ layout }}"
+    when: item.zap|default(False)
+
+  #TODO: check if pool exists
+  #TODO: umount existing pool first
+  - name: Destroy existing pool
+    command: >
+      zpool destroy -f {{ zfs_pool.poolname }}
+    when: zfs_pool.destroy|default(False)
+
+  #TODO: umount all partitions first
+  #TODO: this is already in task wipe !
+  - name: zap (destroy) all partitions on disk
+    command: >
+      sgdisk -Z {{ item }}
+    with_items: "{{ _zap_devices|default([]) }}"
+
+  #TODO: reread partitons
+
   - name: set uuids
     set_fact:
       _partuuids: "{{ _partuuids|default({})|combine({item.0.device + '_' + item.1.num|string: 2147483647|random()|to_uuid()}) }}"

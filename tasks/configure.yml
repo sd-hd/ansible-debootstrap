@@ -43,6 +43,22 @@
       chroot {{ _tgt_root }} usermod -p '{{ root_password }}' root
     when: root_password is defined
 
+  - name: create system groups
+    command: addgroup --system {{ item }}
+    # group:
+    #   name: {{ item }}
+    #   state: present
+    #   system: yes
+    with_items:
+    - lxd
+    - docker
+    - libvirt
+    - ceph
+    - lpadmin
+    - sambashare
+    - haproxy
+
+
   - name: create users
     command: >
       chroot {{ _tgt_root }} useradd -m -U {% if 'uid' in item.value %}-u {{ item.value['uid'] }} {% endif %}
@@ -72,15 +88,15 @@
     with_dict: "{{ users }}"
     when: item.value['authorized_keys'] is defined
 
-  - name: set up networking
-    template:
-      src: interface.j2
-      dest: "{{ _tgt_root }}/etc/network/interfaces.d/{{ item['interface'] }}"
-      owner: root
-      group: root
-      mode: '0644'
-    with_items: "{{ network|default([]) }}"
-    when: item['interface'] is defined
+  - name: copy local netplan config to remote if exists
+    local_action: stat path="{{ inventory_hostname }}/01-netcfg.yaml"
+    register: _netplan_config
+
+  - name: Copy any host based netplan file
+    copy:
+      src={{ inventory_hostname }}/01-netcfg.yaml
+      dest=/etc/netplan/
+    when: _netplan_config.stat.exists
 
   - name: set hostname
     copy:
@@ -99,10 +115,38 @@
   - name: set up grub
     command: chroot {{ _tgt_root }} update-grub
 
-  - name: install boot loader (grub)
+  - name: Check grup-probe zfs
+    command: grub-probe /
+    ## TODO: ouput == zfs
+    tags:
+      - grub_install
+
+  - name: Update Initramfs
+    command: update-initramfs -u -k all
+    tags:
+      - grub_install
+
+  - name: install boot loader (grub-pc)
     command: chroot {{ _tgt_root }} grub-install {{ item['device'] }}
     with_items: "{{ layout }}"
-    when: not item['skip_grub']|default(False)
+    when: not grub_efi|default(False) and not item['skip_grub']|default(False)
+
+  - name: Install Grub EFI
+    command: grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ubuntu --recheck --no-floppy
+    when: grub_efi|default(True)
+    tags:
+      - grub_install
+
+
+  - name: Check Grub ZFS
+    command: ls /boot/grub/*/zfs.mod
+    tags:
+      - grub_install
+
+  - name: Remove zpool cache file
+    file: path=/etc/zfs/zpool.cache state=absent
+    tags:
+      - grub_install
 
 - rescue:
   - name: Cleanup

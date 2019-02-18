@@ -22,7 +22,7 @@
   - name: set encryption targets (partition)
     set_fact:
       _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.value['device']: item.value}) }}"
-    with_dict: "{{ _tgt_devices }}"
+    with_dict: "{{ layout }}"
     when: item.value['encrypt']|default(False)
 
   - name: create encrypted devices

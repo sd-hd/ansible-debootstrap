@@ -12,12 +12,11 @@
   set_fact:
     install_packages: "{{ install_packages + dependencies['zfs'] }}"
 
-- name: create zpools
+- name: create zpools  
   command: >
-    zpool create {% if 'options' in item %}-o {{ item['options']|default([])|join(' -o ') }}{% endif %}
-    {% if 'options' in item %}-O {{ item['fs_options']|default([])|join(' -O ') }}{% endif %}
-    -R {{ _tgt_root }} {{ item['poolname']|default('rpool') }} {{ item['devices']|join(' ') }}
-  with_items: "{{ zfs_pool }}"
+    zpool create {% if 'options' in zfs_pool %}-o {{ zfs_pool['options']|default([])|join(' -o ') }}{% endif %}
+    {% if 'fs_options' in zfs_pool %}-O {{ zfs_pool['fs_options']|default([])|join(' -O ') }}{% endif %}
+    -R {{ _tgt_root }} {{ zfs_pool['poolname']|default('rpool') }} {{ zfs_pool['devices']|join(' ') }}
   register: _zpool
 
 - name: create zfs filesystems

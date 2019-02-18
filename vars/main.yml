@@ -13,6 +13,7 @@ dependencies:
     - cryptsetup
   zfs:
     - zfsutils-linux
+    - zfs-initramfs
 
 mirrors:
   jessie: http://httpredir.debian.org/debian
@@ -20,8 +21,10 @@ mirrors:
   xenial: http://archive.ubuntu.com/ubuntu
   yakkety: http://archive.ubuntu.com/ubuntu
   zesty: http://archive.ubuntu.com/ubuntu
+  bionic: http://archive.ubuntu.com/ubuntu
+  cosmic: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['jessie', 'stretch', 'xenial', 'yakkety', 'zesty']
+supported_releases: ['xenial', 'yakkety', 'zesty', 'bionic', 'cosmic'] # 'jessie', 'stretch', 
 
 _target_devices: []
 _devices_used: []
@@ -29,17 +32,28 @@ _mountlist: []
 
 required_packages:
   all:
-    - grub-pc
+    #- grub-pc
+    #- grub-efi-amd64
+    #- grub-rescue-pc
+    #- grub
     - openssh-server
     - locales
   xenial:
+    - netplan.io
     - linux-image-generic
   yakkety:
+    - netplan.io
     - linux-image-generic
   jessie:
+    - netplan
     - linux-image-amd64
   stretch:
+    - netplan
     - linux-image-amd64
+  bionic:
+    - netplan.io
+  cosmic:
+    - netplan.io
 
 _apt_env:
   DEBIAN_FRONTEND: noninteractive
